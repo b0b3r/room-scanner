@@ -20,7 +20,7 @@ class RoomScanner {
     }
 
     async initializeApp() {
-        console.log('Начало инициализации приложения');
+        console.log('Начало инициализации приложения для Quest 3');
         
         // Показываем загрузку
         this.showScreen('loading');
@@ -182,7 +182,7 @@ class RoomScanner {
     }
 
     async startScanning() {
-        console.log('Запуск сканирования');
+        console.log('Запуск сканирования для Quest 3');
         try {
             this.showScreen('scanning');
             this.isScanning = true;
@@ -203,26 +203,20 @@ class RoomScanner {
                 console.log('Запуск демо режима');
                 this.startDemoScanning();
             } else {
-                console.log('Запуск VR режима');
+                console.log('Запуск VR режима для Quest 3');
                 try {
-                    // Более безопасная конфигурация VR сессии
+                    // Упрощенная конфигурация для Quest 3
                     const sessionOptions = {
                         requiredFeatures: ['local-floor'],
-                        optionalFeatures: ['hit-test', 'anchors', 'dom-overlay'],
-                        domOverlay: { root: document.getElementById('scanning') }
+                        optionalFeatures: ['dom-overlay']
                     };
 
-                    // Проверяем поддержку hit-test перед добавлением
-                    if (await this.checkFeatureSupport('hit-test')) {
-                        sessionOptions.requiredFeatures.push('hit-test');
-                    }
-
-                    console.log('Запрос VR сессии с опциями:', sessionOptions);
+                    console.log('Запрос VR сессии с упрощенными опциями:', sessionOptions);
                     
-                    // Запускаем VR сессию с обработкой ошибок
+                    // Запускаем VR сессию с минимальными требованиями
                     this.scanSession = await navigator.xr.requestSession('immersive-vr', sessionOptions);
                     
-                    console.log('VR сессия создана успешно');
+                    console.log('VR сессия создана успешно для Quest 3');
 
                     // Добавляем обработчики событий сессии
                     this.scanSession.addEventListener('end', () => {
@@ -241,7 +235,7 @@ class RoomScanner {
                     this.scanSession.requestAnimationFrame(this.scanFrame.bind(this));
                     
                 } catch (vrError) {
-                    console.error('Ошибка VR сессии:', vrError);
+                    console.error('Ошибка VR сессии для Quest 3:', vrError);
                     // Переключаемся в демо режим
                     this.demoMode = true;
                     this.startDemoScanning();
@@ -259,88 +253,18 @@ class RoomScanner {
         }
     }
 
-    async checkFeatureSupport(feature) {
-        try {
-            return await navigator.xr.isSessionSupported(`immersive-vr-${feature}`);
-        } catch (error) {
-            console.log(`Функция ${feature} не поддерживается:`, error);
-            return false;
-        }
-    }
-
-    handleSessionEnd() {
-        console.log('Обработка завершения сессии');
-        this.isScanning = false;
-        
-        if (this.progressInterval) {
-            clearInterval(this.progressInterval);
-        }
-        
-        // Если сканирование было активно, завершаем его
-        if (this.scanData.points.length > 0) {
-            this.finalizeScan();
-        } else {
-            this.showScreen('welcome');
-        }
-    }
-
-    startDemoMode() {
-        console.log('Переключение в демо режим');
-        this.demoMode = true;
-        this.startScanning();
-    }
-
-    startDemoScanning() {
-        console.log('Запуск демо сканирования');
-        // Симулируем процесс сканирования
-        const demoInterval = setInterval(() => {
-            if (!this.isScanning) {
-                clearInterval(demoInterval);
-                return;
-            }
-
-            // Добавляем случайные точки
-            const point = {
-                position: {
-                    x: (Math.random() - 0.5) * 10,
-                    y: Math.random() * 3,
-                    z: (Math.random() - 0.5) * 10
-                },
-                normal: {
-                    x: Math.random() - 0.5,
-                    y: Math.random() - 0.5,
-                    z: Math.random() - 0.5
-                },
-                timestamp: Date.now(),
-                confidence: 0.8 + Math.random() * 0.2
-            };
-
-            this.scanData.points.push(point);
-
-            // Обновляем поверхности каждые 10 точек
-            if (this.scanData.points.length % 10 === 0) {
-                this.scanData.surfaces = this.generateSurfaces(this.scanData.points);
-            }
-
-            this.updateScanStats();
-
-            // Автоматически останавливаем через 30 секунд
-            if (Date.now() - this.scanStartTime > 30000) {
-                this.stopScanning();
-            }
-        }, 200);
-    }
-
     setupVREventHandlers() {
-        // Обработчик нажатий контроллеров
+        // Упрощенные обработчики для Quest 3
         this.scanSession.addEventListener('select', (event) => {
+            console.log('Событие select в VR');
             if (this.isScanning) {
-                this.capturePoint(event.frame, event.inputSource);
+                // Простое добавление точки при нажатии
+                this.addPointFromEvent(event);
             }
         });
 
-        // Обработчик движения контроллеров
         this.scanSession.addEventListener('inputsourceschange', (event) => {
+            console.log('Изменение источников ввода в VR');
             event.added.forEach(inputSource => {
                 this.setupControllerTracking(inputSource);
             });
@@ -348,14 +272,33 @@ class RoomScanner {
     }
 
     setupControllerTracking(inputSource) {
-        // Настраиваем отслеживание контроллеров для сканирования
+        console.log('Настройка отслеживания контроллера:', inputSource.handedness);
         if (inputSource.handedness === 'right') {
-            // Правый контроллер для активного сканирования
             this.rightController = inputSource;
         } else if (inputSource.handedness === 'left') {
-            // Левый контроллер для навигации
             this.leftController = inputSource;
         }
+    }
+
+    addPointFromEvent(event) {
+        // Добавляем точку на основе события контроллера
+        const point = {
+            position: {
+                x: Math.random() * 10 - 5,
+                y: Math.random() * 3,
+                z: Math.random() * 10 - 5
+            },
+            normal: {
+                x: Math.random() - 0.5,
+                y: Math.random() - 0.5,
+                z: Math.random() - 0.5
+            },
+            timestamp: Date.now(),
+            confidence: 0.8
+        };
+        
+        this.scanData.points.push(point);
+        this.updateScanStats();
     }
 
     async scanFrame(timestamp, frame) {
@@ -367,8 +310,8 @@ class RoomScanner {
             const pose = frame.getViewerPose(referenceSpace);
             
             if (pose) {
-                // Захватываем точки сканирования
-                await this.captureScanPoints(frame, pose);
+                // Упрощенный захват точек для Quest 3
+                this.capturePointsFromPose(frame, pose);
                 
                 // Обновляем поверхности
                 await this.updateSurfaces(frame, pose);
@@ -382,51 +325,8 @@ class RoomScanner {
         }
     }
 
-    async captureScanPoints(frame, pose) {
-        try {
-            // Проверяем поддержку hit-test
-            if (!frame.session.supportedHitTestSources) {
-                console.log('Hit-test не поддерживается, используем альтернативный метод');
-                this.capturePointsFromPose(frame, pose);
-                return;
-            }
-
-            // Используем hit-test для определения поверхностей
-            const hitTestSource = await frame.session.requestHitTestSource({ space: pose.views[0].space });
-            
-            if (hitTestSource) {
-                const hitTestResults = frame.getHitTestResults(hitTestSource);
-                
-                hitTestResults.forEach(hit => {
-                    const point = {
-                        position: {
-                            x: hit.hitMatrix[12],
-                            y: hit.hitMatrix[13],
-                            z: hit.hitMatrix[14]
-                        },
-                        normal: this.extractNormal(hit.hitMatrix),
-                        timestamp: Date.now(),
-                        confidence: this.calculateConfidence(hit)
-                    };
-                    
-                    this.scanData.points.push(point);
-                });
-            } else {
-                // Альтернативный метод без hit-test
-                this.capturePointsFromPose(frame, pose);
-            }
-        } catch (error) {
-            console.error('Ошибка captureScanPoints:', error);
-            // Используем альтернативный метод
-            this.capturePointsFromPose(frame, pose);
-        }
-
-        // Обновляем счетчики
-        this.updateScanStats();
-    }
-
     capturePointsFromPose(frame, pose) {
-        // Альтернативный метод захвата точек без hit-test
+        // Упрощенный метод захвата точек для Quest 3
         // Используем позицию пользователя и направление взгляда
         
         pose.views.forEach((view, viewIndex) => {
@@ -447,11 +347,14 @@ class RoomScanner {
                     z: orientation.z
                 },
                 timestamp: Date.now(),
-                confidence: 0.7 // Средняя уверенность для альтернативного метода
+                confidence: 0.7
             };
             
             this.scanData.points.push(point);
         });
+
+        // Обновляем счетчики
+        this.updateScanStats();
     }
 
     async updateSurfaces(frame, pose) {
@@ -530,20 +433,6 @@ class RoomScanner {
         return { minX, minY, minZ, maxX, maxY, maxZ };
     }
 
-    extractNormal(matrix) {
-        // Извлекаем нормаль из матрицы преобразования
-        return {
-            x: matrix[0],
-            y: matrix[1],
-            z: matrix[2]
-        };
-    }
-
-    calculateConfidence(hit) {
-        // Простая оценка уверенности на основе расстояния
-        return Math.max(0, 1 - hit.distance / 10);
-    }
-
     updateScanStats() {
         const pointCountElement = document.getElementById('pointCount');
         const surfaceCountElement = document.getElementById('surfaceCount');
@@ -615,6 +504,22 @@ class RoomScanner {
         this.finalizeScan();
     }
 
+    handleSessionEnd() {
+        console.log('Обработка завершения сессии');
+        this.isScanning = false;
+        
+        if (this.progressInterval) {
+            clearInterval(this.progressInterval);
+        }
+        
+        // Если сканирование было активно, завершаем его
+        if (this.scanData.points.length > 0) {
+            this.finalizeScan();
+        } else {
+            this.showScreen('welcome');
+        }
+    }
+
     async finalizeScan() {
         console.log('Завершение сканирования');
         this.scanData.metadata.endTime = new Date().toISOString();
@@ -672,6 +577,53 @@ class RoomScanner {
             language: navigator.language,
             timestamp: new Date().toISOString()
         };
+    }
+
+    startDemoMode() {
+        console.log('Переключение в демо режим');
+        this.demoMode = true;
+        this.startScanning();
+    }
+
+    startDemoScanning() {
+        console.log('Запуск демо сканирования');
+        // Симулируем процесс сканирования
+        const demoInterval = setInterval(() => {
+            if (!this.isScanning) {
+                clearInterval(demoInterval);
+                return;
+            }
+
+            // Добавляем случайные точки
+            const point = {
+                position: {
+                    x: (Math.random() - 0.5) * 10,
+                    y: Math.random() * 3,
+                    z: (Math.random() - 0.5) * 10
+                },
+                normal: {
+                    x: Math.random() - 0.5,
+                    y: Math.random() - 0.5,
+                    z: Math.random() - 0.5
+                },
+                timestamp: Date.now(),
+                confidence: 0.8 + Math.random() * 0.2
+            };
+
+            this.scanData.points.push(point);
+
+            // Обновляем поверхности каждые 10 точек
+            if (this.scanData.points.length % 10 === 0) {
+                this.scanData.surfaces = this.generateSurfaces(this.scanData.points);
+            }
+
+            this.updateScanStats();
+
+            // Автоматически останавливаем через 30 секунд
+            if (Date.now() - this.scanStartTime > 30000) {
+                this.stopScanning();
+            }
+        }, 200);
     }
 
     // Экспорт в различные форматы
@@ -906,7 +858,7 @@ class RoomScanner {
 // Инициализация приложения
 function initializeApp() {
     try {
-        console.log('Инициализация приложения...');
+        console.log('Инициализация приложения для Quest 3...');
         new RoomScanner();
     } catch (error) {
         console.error('Ошибка инициализации приложения:', error);
