@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сканер помещений Meta Quest 3</title>
+    <link rel="stylesheet" href="room_scanner.css">
+</head>
+<body>
+    <div id="app">
+        <div id="loading" class="screen">
+            <div class="loading-content">
+                <h1>Сканер помещений</h1>
+                <p>Подготовка к сканированию...</p>
+                <div class="spinner"></div>
+            </div>
+        </div>
+
+        <div id="welcome" class="screen hidden">
+            <div class="welcome-content">
+                <h1>�� Сканер помещений</h1>
+                <p>Используйте Meta Quest 3 для сканирования вашей квартиры</p>
+                
+                <div class="tips-container">
+                    <h3>💡 Советы для качественного сканирования:</h3>
+                    <ul>
+                        <li>Двигайтесь медленно и плавно</li>
+                        <li>Сканируйте все углы и стены</li>
+                        <li>Обратите внимание на окна и двери</li>
+                        <li>Не забудьте про потолок и пол</li>
+                        <li>Сканируйте мебель и предметы интерьера</li>
+                    </ul>
+                </div>
+
+                <div class="controls">
+                    <button id="startScan" class="btn-primary">Начать сканирование</button>
+                    <button id="loadScan" class="btn-secondary">Загрузить сохраненное</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="scanning" class="screen hidden">
+            <div class="scanning-overlay">
+                <div class="scan-info">
+                    <h2>�� Сканирование...</h2>
+                    <div class="scan-stats">
+                        <div class="stat">
+                            <span class="label">Точек:</span>
+                            <span id="pointCount">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">Поверхностей:</span>
+                            <span id="surfaceCount">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="label">Время:</span>
+                            <span id="scanTime">00:00</span>
+                        </div>
+                    </div>
+                    
+                    <div class="scan-progress">
+                        <div class="progress-bar">
+                            <div id="progressFill" class="progress-fill"></div>
+                        </div>
+                        <span id="progressText">0%</span>
+                    </div>
+                </div>
+
+                <div class="scan-controls">
+                    <button id="pauseScan" class="btn-control">⏸️ Пауза</button>
+                    <button id="stopScan" class="btn-control">⏹️ Остановить</button>
+                    <button id="saveScan" class="btn-control">💾 Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="results" class="screen hidden">
+            <div class="results-content">
+                <h2>✅ Сканирование завершено!</h2>
+                
+                <div class="scan-summary">
+                    <div class="summary-item">
+                        <span class="icon">📊</span>
+                        <span class="label">Всего точек:</span>
+                        <span id="finalPointCount">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="icon">🏠</span>
+                        <span class="label">Поверхностей:</span>
+                        <span id="finalSurfaceCount">0</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="icon">⏱️</span>
+                        <span class="label">Время сканирования:</span>
+                        <span id="finalScanTime">00:00</span>
+                    </div>
+                    <div class="summary-item">
+                        <span class="icon">📏</span>
+                        <span class="label">Размер файла:</span>
+                        <span id="fileSize">0 KB</span>
+                    </div>
+                </div>
+
+                <div class="export-options">
+                    <h3>📤 Экспорт для Blender:</h3>
+                    <div class="export-buttons">
+                        <button id="exportOBJ" class="btn-export">�� OBJ файл</button>
+                        <button id="exportPLY" class="btn-export">�� PLY файл</button>
+                        <button id="exportGLTF" class="btn-export">📦 glTF файл</button>
+                        <button id="exportJSON" class="btn-export">📦 JSON данные</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="newScan" class="btn-primary">�� Новое сканирование</button>
+                    <button id="viewModel" class="btn-secondary">��️ Просмотр модели</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="viewer" class="screen hidden">
+            <div class="viewer-content">
+                <h2>��️ 3D Просмотр</h2>
+                <div id="modelViewer"></div>
+                <button id="backToResults" class="btn-secondary">← Назад к результатам</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="room_scanner.js"></script>
+</body>
+</html> 
