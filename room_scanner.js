@@ -14,6 +14,7 @@ class RoomScanner {
         this.scanSession = null;
         this.scanStartTime = null;
         this.progressInterval = null;
+        this.demoMode = false;
         
         this.initializeApp();
     }
@@ -21,29 +22,63 @@ class RoomScanner {
     async initializeApp() {
         // Показываем загрузку
         this.showScreen('loading');
+        this.updateLoadingStatus('Проверка поддержки WebXR...');
         
-        // Проверяем поддержку WebXR
-        if (!navigator.xr) {
-            this.showError('WebXR не поддерживается в вашем браузере. Пожалуйста, используйте браузер с поддержкой WebXR.');
-            return;
-        }
+        try {
+            // Проверяем поддержку WebXR
+            if (!navigator.xr) {
+                this.updateLoadingStatus('WebXR не поддерживается, переключаемся в демо режим...');
+                await this.delay(1000);
+                this.demoMode = true;
+                this.setupEventListeners();
+                this.showScreen('welcome');
+                return;
+            }
 
-        // Проверяем доступность VR
-        const isSupported = await navigator.xr.isSessionSupported('immersive-vr');
-        if (!isSupported) {
-            this.showError('VR не поддерживается на вашем устройстве. Убедитесь, что Meta Quest 3 подключен и включен.');
-            return;
-        }
+            this.updateLoadingStatus('Проверка поддержки VR...');
+            await this.delay(500);
 
-        // Инициализируем приложение
-        this.setupEventListeners();
-        this.showScreen('welcome');
+            // Проверяем доступность VR
+            const isSupported = await navigator.xr.isSessionSupported('immersive-vr');
+            if (!isSupported) {
+                this.updateLoadingStatus('VR не поддерживается, переключаемся в демо режим...');
+                await this.delay(1000);
+                this.demoMode = true;
+            } else {
+                this.updateLoadingStatus('WebXR поддерживается!');
+                await this.delay(500);
+            }
+
+            // Инициализируем приложение
+            this.setupEventListeners();
+            this.showScreen('welcome');
+            
+        } catch (error) {
+            console.error('Ошибка инициализации:', error);
+            this.updateLoadingStatus('Ошибка инициализации, переключаемся в демо режим...');
+            await this.delay(1000);
+            this.demoMode = true;
+            this.setupEventListeners();
+            this.showScreen('welcome');
+        }
+    }
+
+    updateLoadingStatus(message) {
+        const statusElement = document.getElementById('loadingStatus');
+        if (statusElement) {
+            statusElement.textContent = message;
+        }
+    }
+
+    delay(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 
     setupEventListeners() {
         // Кнопки на экране приветствия
         document.getElementById('startScan').addEventListener('click', () => this.startScanning());
         document.getElementById('loadScan').addEventListener('click', () => this.loadSavedScan());
+        document.getElementById('demoMode').addEventListener('click', () => this.startDemoMode());
 
         // Кнопки управления сканированием
         document.getElementById('pauseScan').addEventListener('click', () => this.pauseScanning());
@@ -60,6 +95,10 @@ class RoomScanner {
         document.getElementById('exportPLY').addEventListener('click', () => this.exportToPLY());
         document.getElementById('exportGLTF').addEventListener('click', () => this.exportToGLTF());
         document.getElementById('exportJSON').addEventListener('click', () => this.exportToJSON());
+
+        // Кнопки ошибок
+        document.getElementById('retryButton').addEventListener('click', () => this.retryInitialization());
+        document.getElementById('backToWelcome').addEventListener('click', () => this.showScreen('welcome'));
     }
 
     async startScanning() {
@@ -79,26 +118,86 @@ class RoomScanner {
                 }
             };
 
-            // Запускаем VR сессию
-            this.scanSession = await navigator.xr.requestSession('immersive-vr', {
-                requiredFeatures: ['local-floor', 'hit-test', 'anchors'],
-                optionalFeatures: ['dom-overlay'],
-                domOverlay: { root: document.getElementById('scanning') }
-            });
+            if (this.demoMode) {
+                // Демо режим - симулируем сканирование
+                this.startDemoScanning();
+            } else {
+                // Реальный VR режим
+                try {
+                    // Запускаем VR сессию
+                    this.scanSession = await navigator.xr.requestSession('immersive-vr', {
+                        requiredFeatures: ['local-floor', 'hit-test', 'anchors'],
+                        optionalFeatures: ['dom-overlay'],
+                        domOverlay: { root: document.getElementById('scanning') }
+                    });
 
-            // Настраиваем обработчики событий VR
-            this.setupVREventHandlers();
-            
-            // Запускаем цикл сканирования
-            this.scanSession.requestAnimationFrame(this.scanFrame.bind(this));
+                    // Настраиваем обработчики событий VR
+                    this.setupVREventHandlers();
+                    
+                    // Запускаем цикл сканирования
+                    this.scanSession.requestAnimationFrame(this.scanFrame.bind(this));
+                } catch (vrError) {
+                    console.error('Ошибка VR сессии:', vrError);
+                    // Переключаемся в демо режим
+                    this.demoMode = true;
+                    this.startDemoScanning();
+                }
+            }
             
             // Запускаем обновление прогресса
             this.startProgressUpdate();
 
         } catch (error) {
             console.error('Ошибка запуска сканирования:', error);
-            this.showError('Не удалось запустить сканирование. Убедитесь, что Meta Quest 3 подключен и включен.');
+            this.showError('Не удалось запустить сканирование. Переключаемся в демо режим.');
+            this.demoMode = true;
+            this.startDemoScanning();
         }
+    }
+
+    startDemoMode() {
+        this.demoMode = true;
+        this.startScanning();
+    }
+
+    startDemoScanning() {
+        // Симулируем процесс сканирования
+        const demoInterval = setInterval(() => {
+            if (!this.isScanning) {
+                clearInterval(demoInterval);
+                return;
+            }
+
+            // Добавляем случайные точки
+            const point = {
+                position: {
+                    x: (Math.random() - 0.5) * 10,
+                    y: Math.random() * 3,
+                    z: (Math.random() - 0.5) * 10
+                },
+                normal: {
+                    x: Math.random() - 0.5,
+                    y: Math.random() - 0.5,
+                    z: Math.random() - 0.5
+                },
+                timestamp: Date.now(),
+                confidence: 0.8 + Math.random() * 0.2
+            };
+
+            this.scanData.points.push(point);
+
+            // Обновляем поверхности каждые 10 точек
+            if (this.scanData.points.length % 10 === 0) {
+                this.scanData.surfaces = this.generateSurfaces(this.scanData.points);
+            }
+
+            this.updateScanStats();
+
+            // Автоматически останавливаем через 30 секунд
+            if (Date.now() - this.scanStartTime > 30000) {
+                this.stopScanning();
+            }
+        }, 200);
     }
 
     setupVREventHandlers() {
@@ -523,8 +622,13 @@ class RoomScanner {
     }
 
     showError(message) {
-        alert(message);
-        this.showScreen('welcome');
+        document.getElementById('errorMessage').textContent = message;
+        this.showScreen('error');
+    }
+
+    retryInitialization() {
+        this.showScreen('loading');
+        this.initializeApp();
     }
 
     // Дополнительные методы
