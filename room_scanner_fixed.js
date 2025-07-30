@@ -20,6 +20,8 @@ class RoomScanner {
     }
 
     async initializeApp() {
+        console.log('Начало инициализации приложения');
+        
         // Показываем загрузку
         this.showScreen('loading');
         this.updateLoadingStatus('Проверка поддержки WebXR...');
@@ -30,11 +32,12 @@ class RoomScanner {
             this.demoMode = true;
             this.setupEventListeners();
             this.showScreen('welcome');
-        }, 5000); // 5 секунд таймаут
+        }, 3000); // 3 секунды таймаут
         
         try {
             // Проверяем поддержку WebXR
             if (!navigator.xr) {
+                console.log('WebXR не поддерживается');
                 this.updateLoadingStatus('WebXR не поддерживается, переключаемся в демо режим...');
                 await this.delay(1000);
                 clearTimeout(timeout);
@@ -52,7 +55,7 @@ class RoomScanner {
             try {
                 isSupported = await Promise.race([
                     navigator.xr.isSessionSupported('immersive-vr'),
-                    new Promise((_, reject) => setTimeout(() => reject(new Error('VR check timeout')), 3000))
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('VR check timeout')), 2000))
                 ]);
             } catch (vrError) {
                 console.log('Ошибка проверки VR:', vrError);
@@ -60,10 +63,12 @@ class RoomScanner {
             }
 
             if (!isSupported) {
+                console.log('VR не поддерживается');
                 this.updateLoadingStatus('VR не поддерживается, переключаемся в демо режим...');
                 await this.delay(1000);
                 this.demoMode = true;
             } else {
+                console.log('WebXR поддерживается');
                 this.updateLoadingStatus('WebXR поддерживается!');
                 await this.delay(500);
             }
@@ -72,6 +77,7 @@ class RoomScanner {
             clearTimeout(timeout);
             this.setupEventListeners();
             this.showScreen('welcome');
+            console.log('Инициализация завершена успешно');
             
         } catch (error) {
             console.error('Ошибка инициализации:', error);
@@ -89,6 +95,7 @@ class RoomScanner {
         if (statusElement) {
             statusElement.textContent = message;
         }
+        console.log('Статус загрузки:', message);
     }
 
     delay(ms) {
@@ -96,33 +103,86 @@ class RoomScanner {
     }
 
     setupEventListeners() {
+        console.log('Настройка обработчиков событий');
+        
         // Кнопки на экране приветствия
-        document.getElementById('startScan').addEventListener('click', () => this.startScanning());
-        document.getElementById('loadScan').addEventListener('click', () => this.loadSavedScan());
-        document.getElementById('demoMode').addEventListener('click', () => this.startDemoMode());
+        const startScanBtn = document.getElementById('startScan');
+        const loadScanBtn = document.getElementById('loadScan');
+        const demoModeBtn = document.getElementById('demoMode');
+
+        if (startScanBtn) {
+            startScanBtn.addEventListener('click', () => this.startScanning());
+        }
+        if (loadScanBtn) {
+            loadScanBtn.addEventListener('click', () => this.loadSavedScan());
+        }
+        if (demoModeBtn) {
+            demoModeBtn.addEventListener('click', () => this.startDemoMode());
+        }
 
         // Кнопки управления сканированием
-        document.getElementById('pauseScan').addEventListener('click', () => this.pauseScanning());
-        document.getElementById('stopScan').addEventListener('click', () => this.stopScanning());
-        document.getElementById('saveScan').addEventListener('click', () => this.saveCurrentScan());
+        const pauseScanBtn = document.getElementById('pauseScan');
+        const stopScanBtn = document.getElementById('stopScan');
+        const saveScanBtn = document.getElementById('saveScan');
+
+        if (pauseScanBtn) {
+            pauseScanBtn.addEventListener('click', () => this.pauseScanning());
+        }
+        if (stopScanBtn) {
+            stopScanBtn.addEventListener('click', () => this.stopScanning());
+        }
+        if (saveScanBtn) {
+            saveScanBtn.addEventListener('click', () => this.saveCurrentScan());
+        }
 
         // Кнопки результатов
-        document.getElementById('newScan').addEventListener('click', () => this.newScan());
-        document.getElementById('viewModel').addEventListener('click', () => this.viewModel());
-        document.getElementById('backToResults').addEventListener('click', () => this.showScreen('results'));
+        const newScanBtn = document.getElementById('newScan');
+        const viewModelBtn = document.getElementById('viewModel');
+        const backToResultsBtn = document.getElementById('backToResults');
+
+        if (newScanBtn) {
+            newScanBtn.addEventListener('click', () => this.newScan());
+        }
+        if (viewModelBtn) {
+            viewModelBtn.addEventListener('click', () => this.viewModel());
+        }
+        if (backToResultsBtn) {
+            backToResultsBtn.addEventListener('click', () => this.showScreen('results'));
+        }
 
         // Кнопки экспорта
-        document.getElementById('exportOBJ').addEventListener('click', () => this.exportToOBJ());
-        document.getElementById('exportPLY').addEventListener('click', () => this.exportToPLY());
-        document.getElementById('exportGLTF').addEventListener('click', () => this.exportToGLTF());
-        document.getElementById('exportJSON').addEventListener('click', () => this.exportToJSON());
+        const exportOBJBtn = document.getElementById('exportOBJ');
+        const exportPLYBtn = document.getElementById('exportPLY');
+        const exportGLTFBtn = document.getElementById('exportGLTF');
+        const exportJSONBtn = document.getElementById('exportJSON');
+
+        if (exportOBJBtn) {
+            exportOBJBtn.addEventListener('click', () => this.exportToOBJ());
+        }
+        if (exportPLYBtn) {
+            exportPLYBtn.addEventListener('click', () => this.exportToPLY());
+        }
+        if (exportGLTFBtn) {
+            exportGLTFBtn.addEventListener('click', () => this.exportToGLTF());
+        }
+        if (exportJSONBtn) {
+            exportJSONBtn.addEventListener('click', () => this.exportToJSON());
+        }
 
         // Кнопки ошибок
-        document.getElementById('retryButton').addEventListener('click', () => this.retryInitialization());
-        document.getElementById('backToWelcome').addEventListener('click', () => this.showScreen('welcome'));
+        const retryBtn = document.getElementById('retryButton');
+        const backToWelcomeBtn = document.getElementById('backToWelcome');
+
+        if (retryBtn) {
+            retryBtn.addEventListener('click', () => this.retryInitialization());
+        }
+        if (backToWelcomeBtn) {
+            backToWelcomeBtn.addEventListener('click', () => this.showScreen('welcome'));
+        }
     }
 
     async startScanning() {
+        console.log('Запуск сканирования');
         try {
             this.showScreen('scanning');
             this.isScanning = true;
@@ -140,10 +200,10 @@ class RoomScanner {
             };
 
             if (this.demoMode) {
-                // Демо режим - симулируем сканирование
+                console.log('Запуск демо режима');
                 this.startDemoScanning();
             } else {
-                // Реальный VR режим
+                console.log('Запуск VR режима');
                 try {
                     // Запускаем VR сессию
                     this.scanSession = await navigator.xr.requestSession('immersive-vr', {
@@ -177,11 +237,13 @@ class RoomScanner {
     }
 
     startDemoMode() {
+        console.log('Переключение в демо режим');
         this.demoMode = true;
         this.startScanning();
     }
 
     startDemoScanning() {
+        console.log('Запуск демо сканирования');
         // Симулируем процесс сканирования
         const demoInterval = setInterval(() => {
             if (!this.isScanning) {
@@ -390,8 +452,15 @@ class RoomScanner {
     }
 
     updateScanStats() {
-        document.getElementById('pointCount').textContent = this.scanData.points.length;
-        document.getElementById('surfaceCount').textContent = this.scanData.surfaces.length;
+        const pointCountElement = document.getElementById('pointCount');
+        const surfaceCountElement = document.getElementById('surfaceCount');
+        
+        if (pointCountElement) {
+            pointCountElement.textContent = this.scanData.points.length;
+        }
+        if (surfaceCountElement) {
+            surfaceCountElement.textContent = this.scanData.surfaces.length;
+        }
     }
 
     startProgressUpdate() {
@@ -400,13 +469,24 @@ class RoomScanner {
                 const elapsed = Date.now() - this.scanStartTime;
                 const minutes = Math.floor(elapsed / 60000);
                 const seconds = Math.floor((elapsed % 60000) / 1000);
-                document.getElementById('scanTime').textContent = 
-                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                const scanTimeElement = document.getElementById('scanTime');
+                if (scanTimeElement) {
+                    scanTimeElement.textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
                 
                 // Обновляем прогресс (примерно 1% каждые 10 секунд)
                 const progress = Math.min(100, Math.floor(elapsed / 10000));
-                document.getElementById('progressFill').style.width = `${progress}%`;
-                document.getElementById('progressText').textContent = `${progress}%`;
+                const progressFillElement = document.getElementById('progressFill');
+                const progressTextElement = document.getElementById('progressText');
+                
+                if (progressFillElement) {
+                    progressFillElement.style.width = `${progress}%`;
+                }
+                if (progressTextElement) {
+                    progressTextElement.textContent = `${progress}%`;
+                }
             }
         }, 1000);
     }
@@ -414,15 +494,20 @@ class RoomScanner {
     pauseScanning() {
         this.isScanning = !this.isScanning;
         const button = document.getElementById('pauseScan');
-        if (this.isScanning) {
-            button.textContent = '⏸️ Пауза';
-            this.scanSession.requestAnimationFrame(this.scanFrame.bind(this));
-        } else {
-            button.textContent = '▶️ Продолжить';
+        if (button) {
+            if (this.isScanning) {
+                button.textContent = '⏸️ Пауза';
+                if (this.scanSession) {
+                    this.scanSession.requestAnimationFrame(this.scanFrame.bind(this));
+                }
+            } else {
+                button.textContent = '▶️ Продолжить';
+            }
         }
     }
 
     stopScanning() {
+        console.log('Остановка сканирования');
         this.isScanning = false;
         
         if (this.progressInterval) {
@@ -438,23 +523,39 @@ class RoomScanner {
     }
 
     async finalizeScan() {
+        console.log('Завершение сканирования');
         this.scanData.metadata.endTime = new Date().toISOString();
         this.scanData.metadata.roomDimensions = this.calculateRoomDimensions();
         
         // Обновляем финальную статистику
-        document.getElementById('finalPointCount').textContent = this.scanData.points.length;
-        document.getElementById('finalSurfaceCount').textContent = this.scanData.surfaces.length;
+        const finalPointCountElement = document.getElementById('finalPointCount');
+        const finalSurfaceCountElement = document.getElementById('finalSurfaceCount');
+        const finalScanTimeElement = document.getElementById('finalScanTime');
+        const fileSizeElement = document.getElementById('fileSize');
+        
+        if (finalPointCountElement) {
+            finalPointCountElement.textContent = this.scanData.points.length;
+        }
+        if (finalSurfaceCountElement) {
+            finalSurfaceCountElement.textContent = this.scanData.surfaces.length;
+        }
         
         const elapsed = Date.now() - this.scanStartTime;
         const minutes = Math.floor(elapsed / 60000);
         const seconds = Math.floor((elapsed % 60000) / 1000);
-        document.getElementById('finalScanTime').textContent = 
-            `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (finalScanTimeElement) {
+            finalScanTimeElement.textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
         
         // Рассчитываем размер файла
         const dataSize = JSON.stringify(this.scanData).length;
         const sizeKB = Math.round(dataSize / 1024);
-        document.getElementById('fileSize').textContent = `${sizeKB} KB`;
+        
+        if (fileSizeElement) {
+            fileSizeElement.textContent = `${sizeKB} KB`;
+        }
         
         this.showScreen('results');
     }
@@ -612,7 +713,7 @@ class RoomScanner {
                 }
             ],
             buffers: [{
-                uri: "data:application/octet-stream;base64," + btoa(String.fromCharCode(...new Uint8Array(new Float32Array(positions.concat(normals)).buffer))
+                uri: "data:application/octet-stream;base64," + btoa(String.fromCharCode(...new Uint8Array(new Float32Array(positions.concat(normals)).buffer)))
             }]
         };
     }
@@ -645,7 +746,10 @@ class RoomScanner {
     }
 
     showError(message) {
-        document.getElementById('errorMessage').textContent = message;
+        const errorMessageElement = document.getElementById('errorMessage');
+        if (errorMessageElement) {
+            errorMessageElement.textContent = message;
+        }
         this.showScreen('error');
     }
 
@@ -672,8 +776,10 @@ class RoomScanner {
     viewModel() {
         this.showScreen('viewer');
         // Здесь можно добавить 3D просмотр модели
-        document.getElementById('modelViewer').innerHTML = 
-            '<p>3D просмотр модели будет доступен в следующей версии</p>';
+        const modelViewerElement = document.getElementById('modelViewer');
+        if (modelViewerElement) {
+            modelViewerElement.innerHTML = '<p>3D просмотр модели будет доступен в следующей версии</p>';
+        }
     }
 
     loadSavedScan() {
@@ -707,6 +813,7 @@ class RoomScanner {
 // Инициализация приложения
 function initializeApp() {
     try {
+        console.log('Инициализация приложения...');
         new RoomScanner();
     } catch (error) {
         console.error('Ошибка инициализации приложения:', error);
@@ -730,4 +837,4 @@ if (document.readyState === 'loading') {
 } else {
     // DOM уже загружен
     initializeApp();
-}
+} 
